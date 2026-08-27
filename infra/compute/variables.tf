@@ -27,3 +27,8 @@ variable "firewall_ids" {
 variable "primary_ip_id" {
   type = number
 }
+
+variable "github_token" {
+  type      = string
+  sensitive = true
+}
