@@ -23,3 +23,8 @@ variable "admin_cidr" {
 variable "ssh_public_key" {
   type = string
 }
+
+variable "github_token" {
+  type      = string
+  sensitive = true
+}

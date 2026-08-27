@@ -53,3 +53,14 @@ wait_for_nodes 11
 # set proper labels for the worker nodes
 kubectl label node k3d-db-0 k3d-db-1 k3d-db-2 node-role.kubernetes.io/database=
 kubectl label node k3d-app-0 k3d-app-1 k3d-app-2 k3d-app-3 k3d-app-4 node-role.kubernetes.io/worker=
+
+# install and setup flux
+curl -s https://fluxcd.io/install.sh | bash
+
+export GITHUB_TOKEN="${github_token}"
+flux bootstrap github \
+  --owner=yawnartey \
+  --repository=ikim-devops-coding-challenge \
+  --branch=main \
+  --path=clusters/openbao-platform \
+  --personal
