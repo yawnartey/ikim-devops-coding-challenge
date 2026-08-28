@@ -19,3 +19,7 @@ spec:
       kind: ExternalSecret
       name: demo-config
       namespace: demo
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: demo-app
+      namespace: demo
