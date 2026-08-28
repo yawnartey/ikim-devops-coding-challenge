@@ -30,7 +30,9 @@ spec:
             tls_key_file     = "/vault/tls/tls.key"
           }
 
-          storage "postgresql" {}
+          storage "postgresql" {
+            ha_enabled = "true"
+          }
 
           service_registration "kubernetes" {}
       dataStorage:
