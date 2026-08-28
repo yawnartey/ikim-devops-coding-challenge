@@ -72,3 +72,27 @@ data:
     bao_api GET /v1/auth/kubernetes/role/eso-role | jq -r '.data.bound_service_account_names'
 
     echo "OpenBao configuration complete."
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openbao-configure
+  namespace: openbao
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: openbao-init-unseal
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: alpine/k8s:1.30.0
+          command: ["/bin/sh", "/scripts/run.sh"]
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+      volumes:
+        - name: script
+          configMap:
+            name: openbao-configure-script
+            defaultMode: 0755
