@@ -8,7 +8,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./platform/eso
+  path: ./platform/eso/controller
   prune: true
   wait: true
   timeout: 5m
@@ -19,6 +19,3 @@ spec:
       kind: HelmRelease
       name: external-secrets
       namespace: external-secrets
-    - apiVersion: external-secrets.io/v1
-      kind: ClusterSecretStore
-      name: openbao
