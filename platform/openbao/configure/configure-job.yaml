@@ -8,67 +8,67 @@ data:
     #!/bin/sh
     set -eu
 
-    ADDR="https://openbao.openbao.svc.cluster.local:8200"
+    ADDR="https://openbao-active.openbao.svc.cluster.local:8200"
     ROOT_TOKEN=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.root_token}' | base64 -d)
 
-    MOUNTED=$(curl -sk -H "X-Vault-Token: $ROOT_TOKEN" "${ADDR}/v1/sys/mounts" | jq -r 'has("secret/")')
-    if [ "$MOUNTED" = "false" ]; then
+    echo "Waiting for an active, unsealed OpenBao node..."
+    elapsed=0
+    until [ "$(curl -sk "${ADDR}/v1/sys/seal-status" 2>/dev/null | jq -r '.sealed' 2>/dev/null)" = "false" ]; do
+      sleep 5
+      elapsed=$((elapsed + 5))
+      if [ "$elapsed" -ge 180 ]; then
+        echo "Timed out waiting for an active OpenBao node"
+        exit 1
+      fi
+    done
+
+    bao_api() {
+      method="$1"
+      path="$2"
+      data="${3:-}"
+      if [ -n "$data" ]; then
+        resp=$(curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X "$method" "${ADDR}${path}" -d "$data")
+      else
+        resp=$(curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X "$method" "${ADDR}${path}")
+      fi
+      if [ -n "$resp" ] && echo "$resp" | jq -e '(.errors // []) | length > 0' >/dev/null 2>&1; then
+        echo "FAILED: $method $path" >&2
+        echo "$resp" >&2
+        exit 1
+      fi
+      printf '%s' "$resp"
+    }
+
+    MOUNTS=$(bao_api GET /v1/sys/mounts)
+    if [ "$(echo "$MOUNTS" | jq -r '(.data // .) | has("secret/")')" = "false" ]; then
       echo "Enabling kv-v2 secrets engine..."
-      curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X POST "${ADDR}/v1/sys/mounts/secret" \
-        -d '{"type": "kv-v2"}'
+      bao_api POST /v1/sys/mounts/secret '{"type": "kv-v2"}'
     else
       echo "kv-v2 already enabled."
     fi
 
-    AUTH_ENABLED=$(curl -sk -H "X-Vault-Token: $ROOT_TOKEN" "${ADDR}/v1/sys/auth" | jq -r 'has("kubernetes/")')
-    if [ "$AUTH_ENABLED" = "false" ]; then
+    AUTHS=$(bao_api GET /v1/sys/auth)
+    if [ "$(echo "$AUTHS" | jq -r '(.data // .) | has("kubernetes/")')" = "false" ]; then
       echo "Enabling Kubernetes auth..."
-      curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X POST "${ADDR}/v1/sys/auth/kubernetes" \
-        -d '{"type": "kubernetes"}'
+      bao_api POST /v1/sys/auth/kubernetes '{"type": "kubernetes"}'
     else
       echo "Kubernetes auth already enabled."
     fi
 
     echo "Configuring Kubernetes auth backend..."
     KUBE_CA_JSON=$(jq -Rs '.' /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)
-    curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X POST "${ADDR}/v1/auth/kubernetes/config" \
-      -d "{\"kubernetes_host\": \"https://kubernetes.default.svc:443\", \"kubernetes_ca_cert\": ${KUBE_CA_JSON}}"
+    bao_api POST /v1/auth/kubernetes/config \
+      "{\"kubernetes_host\": \"https://kubernetes.default.svc:443\", \"kubernetes_ca_cert\": ${KUBE_CA_JSON}}"
 
     echo "Writing eso-policy..."
-    curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X PUT "${ADDR}/v1/sys/policies/acl/eso-policy" \
-      -d '{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}"}'
+    bao_api PUT /v1/sys/policies/acl/eso-policy \
+      '{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}"}'
 
-    echo "Creating eso-role bound to the ESO ServiceAccount..."
-    curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X POST "${ADDR}/v1/auth/kubernetes/role/eso-role" \
-      -d '{
-        "bound_service_account_names": "external-secrets",
-        "bound_service_account_namespaces": "external-secrets",
-        "policies": "eso-policy",
-        "ttl": "1h"
-      }'
+    echo "Creating eso-role..."
+    bao_api POST /v1/auth/kubernetes/role/eso-role \
+      '{"bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "policies": "eso-policy", "ttl": "1h"}'
+
+    echo "Verifying eso-role..."
+    bao_api GET /v1/auth/kubernetes/role/eso-role | jq -r '.data.bound_service_account_names'
 
     echo "OpenBao configuration complete."
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: openbao-configure
-  namespace: openbao
-spec:
-  backoffLimit: 3
-  template:
-    spec:
-      serviceAccountName: openbao-init-unseal
-      restartPolicy: OnFailure
-      containers:
-        - name: configure
-          image: alpine/k8s:1.30.0
-          command: ["/bin/sh", "/scripts/run.sh"]
-          volumeMounts:
-            - name: script
-              mountPath: /scripts
-      volumes:
-        - name: script
-          configMap:
-            name: openbao-configure-script
-            defaultMode: 0755
