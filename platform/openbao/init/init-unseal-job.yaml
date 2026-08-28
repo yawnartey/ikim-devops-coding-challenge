@@ -10,6 +10,21 @@ data:
 
     ADDR="https://openbao.openbao.svc.cluster.local:8200"
 
+    wait_for_pod() {
+      local pod=$1
+      local addr="https://${pod}.openbao-internal.openbao.svc.cluster.local:8200"
+      local timeout=180
+      local elapsed=0
+      until curl -sk "${addr}/v1/sys/seal-status" | jq -e '.sealed != null' > /dev/null 2>&1; do
+        sleep 5
+        elapsed=$((elapsed + 5))
+        if [ "$elapsed" -ge "$timeout" ]; then
+          echo "Timed out waiting for ${pod} to become reachable"
+          exit 1
+        fi
+      done
+    }
+
     INITIALIZED=$(curl -sk "${ADDR}/v1/sys/init" | jq -r '.initialized')
 
     if [ "$INITIALIZED" = "false" ]; then
@@ -34,6 +49,9 @@ data:
     K3=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_3}' | base64 -d)
 
     for pod in openbao-0 openbao-1 openbao-2; do
+      echo "Waiting for ${pod} to become reachable..."
+      wait_for_pod "$pod"
+
       POD_ADDR="https://${pod}.openbao-internal.openbao.svc.cluster.local:8200"
       SEALED=$(curl -sk "${POD_ADDR}/v1/sys/seal-status" | jq -r '.sealed')
       if [ "$SEALED" = "true" ]; then
