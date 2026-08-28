@@ -13,7 +13,7 @@ spec:
   wait: true
   timeout: 10m
   dependsOn:
-    - name: cert-manager
+    - name: cert-manager-issuers
     - name: postgres
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
