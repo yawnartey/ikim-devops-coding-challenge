@@ -43,7 +43,6 @@ data:
       -d '{
         "bound_service_account_names": "external-secrets",
         "bound_service_account_namespaces": "external-secrets",
-        "bound_audiences": "vault",
         "policies": "eso-policy",
         "ttl": "1h"
       }'
