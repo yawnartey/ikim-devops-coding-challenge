@@ -15,9 +15,10 @@ systemctl enable --now docker
 # install k3d
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-# install kubectl
+# install and setup kubectl
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+ln -sf /usr/local/bin/kubectl /usr/local/bin/k
 rm kubectl
 
 # wait for nodes 
@@ -57,7 +58,6 @@ kubectl label node k3d-app-0 k3d-app-1 k3d-app-2 k3d-app-3 k3d-app-4 node-role.k
 # taint the nodes
 kubectl taint node k3d-openbao-platform-server-0 k3d-openbao-platform-server-1 k3d-openbao-platform-server-2 \
   node-role.kubernetes.io/control-plane=:NoSchedule
-
 kubectl taint node k3d-db-0 k3d-db-1 k3d-db-2 workload=database:NoSchedule
 
 # install and setup flux
