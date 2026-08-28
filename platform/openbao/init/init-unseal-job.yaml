@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openbao-init-unseal-script
+  namespace: openbao
+data:
+  run.sh: |
+    #!/bin/sh
+    set -eu
+
+    ADDR="https://openbao.openbao.svc.cluster.local:8200"
+
+    INITIALIZED=$(curl -sk "${ADDR}/v1/sys/init" | jq -r '.initialized')
+
+    if [ "$INITIALIZED" = "false" ]; then
+      echo "Initializing OpenBao..."
+      INIT_OUTPUT=$(curl -sk -X PUT "${ADDR}/v1/sys/init" \
+        -d '{"secret_shares": 5, "secret_threshold": 3}')
+
+      kubectl create secret generic openbao-unseal-keys \
+        --namespace=openbao \
+        --from-literal=root_token="$(echo "$INIT_OUTPUT" | jq -r '.root_token')" \
+        --from-literal=unseal_key_1="$(echo "$INIT_OUTPUT" | jq -r '.keys_base64[0]')" \
+        --from-literal=unseal_key_2="$(echo "$INIT_OUTPUT" | jq -r '.keys_base64[1]')" \
+        --from-literal=unseal_key_3="$(echo "$INIT_OUTPUT" | jq -r '.keys_base64[2]')" \
+        --from-literal=unseal_key_4="$(echo "$INIT_OUTPUT" | jq -r '.keys_base64[3]')" \
+        --from-literal=unseal_key_5="$(echo "$INIT_OUTPUT" | jq -r '.keys_base64[4]')"
+    else
+      echo "Already initialized, skipping."
+    fi
+
+    K1=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_1}' | base64 -d)
+    K2=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_2}' | base64 -d)
+    K3=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_3}' | base64 -d)
+
+    for pod in openbao-0 openbao-1 openbao-2; do
+      POD_ADDR="https://${pod}.openbao-internal.openbao.svc.cluster.local:8200"
+      SEALED=$(curl -sk "${POD_ADDR}/v1/sys/seal-status" | jq -r '.sealed')
+      if [ "$SEALED" = "true" ]; then
+        echo "Unsealing ${pod}..."
+        curl -sk -X PUT "${POD_ADDR}/v1/sys/unseal" -d "{\"key\": \"$K1\"}" > /dev/null
+        curl -sk -X PUT "${POD_ADDR}/v1/sys/unseal" -d "{\"key\": \"$K2\"}" > /dev/null
+        curl -sk -X PUT "${POD_ADDR}/v1/sys/unseal" -d "{\"key\": \"$K3\"}" > /dev/null
+      else
+        echo "${pod} already unsealed."
+      fi
+    done
+
+    echo "Init/unseal complete."
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openbao-init-unseal
+  namespace: openbao
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: openbao-init-unseal
+      restartPolicy: OnFailure
+      containers:
+        - name: init-unseal
+          image: alpine/k8s:1.30.0
+          command: ["/bin/sh", "/scripts/run.sh"]
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+      volumes:
+        - name: script
+          configMap:
+            name: openbao-init-unseal-script
+            defaultMode: 0755

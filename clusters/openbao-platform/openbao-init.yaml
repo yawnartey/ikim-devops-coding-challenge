@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: openbao-init
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./platform/openbao/init
+  prune: true
+  wait: true
+  timeout: 5m
+  dependsOn:
+    - name: openbao-server
+  healthChecks:
+    - apiVersion: batch/v1
+      kind: Job
+      name: openbao-init-unseal
+      namespace: openbao
