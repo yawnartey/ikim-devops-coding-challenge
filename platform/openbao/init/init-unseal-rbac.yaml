@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openbao-init-unseal
+  namespace: openbao
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openbao-init-unseal
+  namespace: openbao
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openbao-init-unseal
+  namespace: openbao
+subjects:
+  - kind: ServiceAccount
+    name: openbao-init-unseal
+    namespace: openbao
+roleRef:
+  kind: Role
+  name: openbao-init-unseal
+  apiGroup: rbac.authorization.k8s.io
