@@ -11,7 +11,7 @@ spec:
   path: ./platform/openbao/init
   prune: true
   wait: true
-  timeout: 5m
+  timeout: 10m
   dependsOn:
     - name: openbao-server
   healthChecks:
