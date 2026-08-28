@@ -54,6 +54,12 @@ wait_for_nodes 11
 kubectl label node k3d-db-0 k3d-db-1 k3d-db-2 node-role.kubernetes.io/database=
 kubectl label node k3d-app-0 k3d-app-1 k3d-app-2 k3d-app-3 k3d-app-4 node-role.kubernetes.io/worker=
 
+# taint the nodes
+kubectl taint node k3d-openbao-platform-server-0 k3d-openbao-platform-server-1 k3d-openbao-platform-server-2 \
+  node-role.kubernetes.io/control-plane=:NoSchedule
+
+kubectl taint node k3d-db-0 k3d-db-1 k3d-db-2 workload=database:NoSchedule
+
 # install and setup flux
 curl -s https://fluxcd.io/install.sh | bash
 
