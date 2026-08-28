@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: demo-seed
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./apps/demo-seed
+  prune: true
+  wait: true
+  timeout: 5m
+  dependsOn:
+    - name: eso-store
+  healthChecks:
+    - apiVersion: batch/v1
+      kind: Job
+      name: demo-seed
+      namespace: openbao
