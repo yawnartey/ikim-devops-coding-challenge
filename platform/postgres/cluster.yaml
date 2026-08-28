@@ -1,0 +1,25 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: openbao-postgres
+  namespace: openbao
+spec:
+  instances: 3
+
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/database: ""
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: database
+        effect: NoSchedule
+
+  storage:
+    storageClass: local-path
+    size: 30Gi
+
+  bootstrap:
+    initdb:
+      database: openbao
+      owner: openbao

@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openbao
+  namespace: openbao
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: openbao
+      version: ">=0.20.0 <1.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: openbao
+        namespace: openbao
+  values:
+    server:
+      ha:
+        enabled: true
+        replicas: 3
+        raft:
+          enabled: false
+        config: |
+          ui = true
+
+          listener "tcp" {
+            address          = "[::]:8200"
+            cluster_address  = "[::]:8201"
+            tls_cert_file    = "/vault/tls/tls.crt"
+            tls_key_file     = "/vault/tls/tls.key"
+          }
+
+          storage "postgresql" {}
+
+          service_registration "kubernetes" {}
+      dataStorage:
+        enabled: false
+      extraSecretEnvironmentVars:
+        - envName: BAO_PG_CONNECTION_URL
+          secretName: openbao-postgres-app
+          secretKey: uri
+      volumes:
+        - name: tls
+          secret:
+            secretName: openbao-tls
+      volumeMounts:
+        - name: tls
+          mountPath: /vault/tls
+          readOnly: true
