@@ -14,7 +14,8 @@ spec:
         name: openbao
         namespace: openbao
   values:
-    global: tlsDisable:false
+    global:
+      tlsDisable: false
     server:
       ha:
         enabled: true
