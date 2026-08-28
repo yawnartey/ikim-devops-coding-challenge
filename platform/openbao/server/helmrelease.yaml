@@ -14,6 +14,7 @@ spec:
         name: openbao
         namespace: openbao
   values:
+    global: false
     server:
       ha:
         enabled: true
