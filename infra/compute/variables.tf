@@ -8,7 +8,7 @@ variable "location" {
 
 variable "server_type" {
   type    = string
-  default = "ccx33"
+  default = "ccx23"
 }
 
 variable "image" {
