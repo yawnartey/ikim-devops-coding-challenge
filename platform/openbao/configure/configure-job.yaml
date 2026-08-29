@@ -62,7 +62,7 @@ data:
 
     echo "Writing eso-policy..."
     bao_api PUT /v1/sys/policies/acl/eso-policy \
-      '{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}"}'
+      '{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}\n\npath \"secret/metadata/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}"}'
 
     echo "Creating eso-role..."
     bao_api POST /v1/auth/kubernetes/role/eso-role \
