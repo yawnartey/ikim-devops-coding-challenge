@@ -28,7 +28,7 @@ data:
     INITIALIZED=$(curl -sk "${ADDR}/v1/sys/init" | jq -r '.initialized')
 
     if [ "$INITIALIZED" = "false" ]; then
-      echo "Initializing OpenBao..."
+      echo "Initializing OpenBao"
       INIT_OUTPUT=$(curl -sk -X PUT "${ADDR}/v1/sys/init" \
         -d '{"secret_shares": 5, "secret_threshold": 3}')
 
@@ -49,13 +49,13 @@ data:
     K3=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_3}' | base64 -d)
 
     for pod in openbao-0 openbao-1 openbao-2; do
-      echo "Waiting for ${pod} to become reachable..."
+      echo "Waiting for ${pod} to become reachable"
       wait_for_pod "$pod"
 
       POD_ADDR="https://${pod}.openbao-internal.openbao.svc.cluster.local:8200"
       SEALED=$(curl -sk "${POD_ADDR}/v1/sys/seal-status" | jq -r '.sealed')
       if [ "$SEALED" = "true" ]; then
-        echo "Unsealing ${pod}..."
+        echo "Unsealing ${pod}"
         curl -sk -X PUT "${POD_ADDR}/v1/sys/unseal" -d "{\"key\": \"$K1\"}" > /dev/null
         curl -sk -X PUT "${POD_ADDR}/v1/sys/unseal" -d "{\"key\": \"$K2\"}" > /dev/null
         curl -sk -X PUT "${POD_ADDR}/v1/sys/unseal" -d "{\"key\": \"$K3\"}" > /dev/null

@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: openbao
+  namespace: openbao
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: HostSNI(`openbao.2.28.45.162.sslip.io`)
+      services:
+        - name: openbao-active
+          port: 8200
+  tls:
+    passthrough: true

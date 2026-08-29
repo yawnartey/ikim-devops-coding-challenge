@@ -11,7 +11,7 @@ data:
     ADDR="https://openbao-active.openbao.svc.cluster.local:8200"
     ROOT_TOKEN=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.root_token}' | base64 -d)
 
-    echo "Waiting for an active, unsealed OpenBao node..."
+    echo "Waiting for an active, unsealed OpenBao node"
     elapsed=0
     until [ "$(curl -sk "${ADDR}/v1/sys/seal-status" 2>/dev/null | jq -r '.sealed' 2>/dev/null)" = "false" ]; do
       sleep 5
@@ -22,7 +22,7 @@ data:
       fi
     done
 
-    echo "Seeding demo secret..."
+    echo "Seeding demo secret"
     resp=$(curl -sk -H "X-Vault-Token: $ROOT_TOKEN" -X POST "${ADDR}/v1/secret/data/demo/config" \
       -d '{"data": {"message": "hello from openbao"}}')
 
