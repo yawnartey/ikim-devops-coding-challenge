@@ -38,3 +38,8 @@ variable "hetzner_s3_secret_key" {
   type      = string
   sensitive = true
 }
+
+variable "sops_age_key" {
+  type      = string
+  sensitive = true
+}

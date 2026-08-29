@@ -58,6 +58,7 @@ module "compute" {
   firewall_ids  = [module.security.firewall_id]
   primary_ip_id = module.networking.primary_ip_id
   github_token = var.github_token
+  sops_age_key = var.sops_age_key
 }
 
 # storage module
