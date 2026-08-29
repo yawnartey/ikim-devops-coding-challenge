@@ -7,3 +7,4 @@ ikim_README.md
 crash.log
 infra/terraform.tfvars
 *.xlsx
+age.agekey

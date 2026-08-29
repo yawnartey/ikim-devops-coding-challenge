@@ -32,3 +32,13 @@ variable "github_token" {
   type      = string
   sensitive = true
 }
+
+variable "sops_age_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "sops_age_key" {
+  type      = string
+  sensitive = true
+}
