@@ -6,3 +6,4 @@ ikim_README.md
 *.tfstate.*
 crash.log
 infra/terraform.tfvars
+*.xlsx
