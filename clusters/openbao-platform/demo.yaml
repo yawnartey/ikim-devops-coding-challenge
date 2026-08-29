@@ -23,3 +23,7 @@ spec:
       kind: Deployment
       name: demo-app
       namespace: demo
+    - apiVersion: external-secrets.io/v1alpha1
+      kind: PushSecret
+      name: demo-push
+      namespace: demo
