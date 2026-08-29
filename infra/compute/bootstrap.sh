@@ -70,3 +70,8 @@ flux bootstrap github \
   --branch=main \
   --path=clusters/openbao-platform \
   --personal
+
+# setup sop
+kubectl create secret generic sops-age \
+  --namespace=flux-system \
+  --from-literal=age.agekey="${sops_age_key}"

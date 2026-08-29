@@ -11,6 +11,7 @@ resource "hcloud_server" "this" {
   server_type  = var.server_type
   user_data = templatefile("${path.module}/bootstrap.sh", {
     github_token = var.github_token
+    sops_age_key = var.sops_age_key
   })
   image        = var.image
   location     = var.location
