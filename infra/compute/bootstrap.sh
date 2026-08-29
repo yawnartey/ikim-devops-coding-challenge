@@ -40,7 +40,7 @@ wait_for_nodes() {
 export HOME=/root
 
 # create the server (control plane)
-k3d cluster create openbao-platform --servers 3 --agents 0 --wait
+k3d cluster create openbao-platform --servers 3 --agents 0 -p "443:443@loadbalancer" --wait
 wait_for_nodes 3
 
 # create db agents (database workers)

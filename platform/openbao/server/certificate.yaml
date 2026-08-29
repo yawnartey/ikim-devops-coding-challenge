@@ -20,6 +20,7 @@ spec:
     - openbao-internal.openbao.svc
     - openbao-internal.openbao.svc.cluster.local
     - "*.openbao-internal.openbao.svc.cluster.local"
+    - openbao.2.28.45.162.sslip.io
     - localhost
   ipAddresses:
     - 127.0.0.1
