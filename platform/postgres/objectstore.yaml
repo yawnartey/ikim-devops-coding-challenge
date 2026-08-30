@@ -4,6 +4,7 @@ metadata:
   name: openbao-postgres-backups
   namespace: openbao
 spec:
+  retentionPolicy: "30d"
   configuration:
     destinationPath: s3://openbao-platform-backups/
     endpointURL: https://fsn1.your-objectstorage.com
