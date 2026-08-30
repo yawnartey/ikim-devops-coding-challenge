@@ -61,9 +61,10 @@ kubectl taint node k3d-openbao-platform-server-0 k3d-openbao-platform-server-1 k
   node-role.kubernetes.io/control-plane=:NoSchedule
 kubectl taint node k3d-db-0 k3d-db-1 k3d-db-2 workload=database:NoSchedule
 
-# install and setup flux
+# install flux cli
 curl -s https://fluxcd.io/install.sh | bash
 
+# boostrap flux against the repo
 export GITHUB_TOKEN="${github_token}"
 flux bootstrap github \
   --owner=yawnartey \
