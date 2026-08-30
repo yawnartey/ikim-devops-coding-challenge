@@ -1,0 +1,20 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: openbao-postgres-backups
+  namespace: openbao
+spec:
+  configuration:
+    destinationPath: s3://openbao-platform-backups/
+    endpointURL: https://fsn1.your-objectstorage.com
+    s3Credentials:
+      accessKeyId:
+        name: backup-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: backup-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
