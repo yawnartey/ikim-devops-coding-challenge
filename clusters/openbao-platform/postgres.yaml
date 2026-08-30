@@ -14,14 +14,12 @@ spec:
   timeout: 10m
   dependsOn:
     - name: cnpg
+    - name: cnpg-barman-plugin
   healthChecks:
     - apiVersion: postgresql.cnpg.io/v1
       kind: Cluster
       name: openbao-postgres
       namespace: openbao
-  dependsOn:
-    - name: cnpg
-    - name: cnpg-barman-plugin
   decryption:
     provider: sops
     secretRef:
