@@ -19,3 +19,10 @@ spec:
       kind: Cluster
       name: openbao-postgres
       namespace: openbao
+  dependsOn:
+    - name: cnpg
+    - name: cnpg-barman-plugin
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
