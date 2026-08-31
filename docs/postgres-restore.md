@@ -103,6 +103,7 @@ kubectl get backup manual-1 -n openbao -o yaml | sed -n '/^status:/,$p'
 Recovery always creates a new cluster. It never modifies the source, so this is safe to run while `openbao-postgres` is serving traffic.
 
 ```yaml
+kubectl apply -f - <<'EOF'
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -135,6 +136,8 @@ spec:
         parameters:
           barmanObjectName: openbao-postgres-backups
           serverName: openbao-postgres
+EOF
+
 ```
 
 Notes on the fields that are easy to miss and to not get it right:
