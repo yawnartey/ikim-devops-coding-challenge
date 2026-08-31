@@ -1,3 +1,69 @@
+# Git Repository with all manifest and configurations
+
+```
+https://github.com/yawnartey/ikim-devops-coding-challenge
+```
+
+# Working Demonstration
+
+### 1. Spinning up the cluster via Terraform
+
+![tf-apply-output](diagrams/tf-apply-output.png)
+
+### 2. 3 control plane nodes, 3 database node and 5 worker nodes all properly labelled
+
+![nodes](diagrams/nodes.png)
+
+### 3. Node scheduling in place. Control plane and database nodes are tainted so no application worker lands on them
+
+![taints](diagrams/taints.png)
+![taints-2](diagrams/taints-2.png)
+
+### 4. GitOps application and discpline. Flux kustomization all showing True and flux pulling from Git
+
+![gitops](diagrams/gitops.png)
+![flux-reconciliation](diagrams/flux-reconciliation.png)
+
+### 5. Postgres is Highly Available
+
+![postgres-ha](diagrams/postgres-ha.png)
+
+### 6. Postgres backups are automated
+
+![postgres-ba](diagrams/postgres-backup.png)
+![hetzner-s3](diagrams/hetzner-s3.png)
+
+### 7. Restoring the backup by following the Restore backup guide
+
+![restore-backup](diagrams/restore-backup.png)
+
+### 8. Openbao is Hihghly available
+
+![openbao-ha](diagrams/openbao-ha.png)
+
+### 9. Openbao storage is Postgres
+
+![openbao-storage](diagrams/openbao-storage.png)
+
+### 10. No local PVC for Openbao
+
+![no-local-pvc](diagrams/no-local-pvc.png)
+
+### 11. TLS Exposure
+
+![tls-exposure](diagrams/tls-exposure.png)
+
+### 12. Secrets synchronisation from OpenBao to Kubernetes and from Kubernetes to OpenBao
+
+### Pull: OpenBao -> Kubernetes
+
+These 3 steps in the screenshot shows secrets synchronisation from OpenBao into the K8s cluster
+![secrets-synced](diagrams/secrets-synced.png)
+
+### Push: Kubernetes -> OpenBao
+
+![secrets-pulled](diagrams/secrets-pulled.png)
+
 # Architecture Decisions
 
 This document explains my implementation approach for the platform and the reasoning behind each decision along the way. It will grow as I build out each part of the platform, starting here with the multi-node Kubernetes cluster setup and the PostgreSQL solution as first 2 point of the key requirements. Later sections cover OpenBao's configuration, the External Secrets workflow, and how GitOps with Flux ties everything together.
