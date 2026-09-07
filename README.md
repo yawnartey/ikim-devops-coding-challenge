@@ -180,7 +180,15 @@ For backups, CNPG uses Barman Cloud. It constantly ships the WAL, basically a ru
 
 ### 2.2 Why PostgreSQL over OpenBao's Integrated Storage
 
-OpenBao's Integrated Storage, based on Raft, is actually the simpler and more common choice for HA since it needs no external database at all. I used PostgreSQL here because it is part of the mentioned requirements and because it gives a chance to demonstrate operating a real stateful backend under GitOps, including replication, backup and restore, and node placement, rather than relying on Raft's self-contained consensus.
+- **Integrated Storage (Raft):** Integrated Storage, built on Raft, is OpenBao's default and simpler choice. It does not require an external database, which makes it easier to set up and manage.
+
+- **Stateless OpenBao Pods:** With PostgreSQL, OpenBao pods do not store data on their own disks. `dataStorage.enabled` is set to `false`, and no PersistentVolumeClaim is required. A pod can therefore be deleted or moved to another node without losing data because the data is stored in PostgreSQL.
+
+- **Persistent Storage with Raft:** With Raft, each OpenBao node stores a full copy of the data on its own persistent volume. The node and its storage are therefore tied together. Replacing a node may require restoring or moving its storage.
+
+- **Point-in-Time Recovery:** Raft backups are snapshots created with `bao operator raft snapshot save`. If the latest snapshot is 30 minutes old and something goes wrong, restoring it means losing changes made during those 30 minutes. PostgreSQL with WAL archiving can restore the database to a specific point in time within the configured retention period.
+
+- **Overall:** Raft is simpler because OpenBao includes the storage system itself. PostgreSQL adds another system to manage, but it provides stateless OpenBao pods and more flexible backup and recovery options. For a system storing important credentials, the ability to recover to a specific point in time is a major advantage.
 
 ## 3. OpenBao Configuration
 
