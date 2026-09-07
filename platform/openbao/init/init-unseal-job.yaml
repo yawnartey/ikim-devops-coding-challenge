@@ -8,6 +8,7 @@ data:
     #!/bin/sh
     set -eu
 
+    # initialise the openbao server
     ADDR="https://openbao.openbao.svc.cluster.local:8200"
 
     wait_for_pod() {
@@ -25,6 +26,7 @@ data:
       done
     }
 
+    # generate the root key, split it into 5 shamir and returns the root token
     INITIALIZED=$(curl -sk "${ADDR}/v1/sys/init" | jq -r '.initialized')
 
     if [ "$INITIALIZED" = "false" ]; then
@@ -44,6 +46,7 @@ data:
       echo "Already initialized, skipping."
     fi
 
+    # unseal (obtain the generated root key)
     K1=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_1}' | base64 -d)
     K2=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_2}' | base64 -d)
     K3=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.unseal_key_3}' | base64 -d)

@@ -8,6 +8,7 @@ data:
     #!/bin/sh
     set -eu
 
+    #authenticate as root, then configure the engine, auth method, policy and role
     ADDR="https://openbao-active.openbao.svc.cluster.local:8200"
     ROOT_TOKEN=$(kubectl get secret openbao-unseal-keys -n openbao -o jsonpath='{.data.root_token}' | base64 -d)
 
@@ -39,6 +40,7 @@ data:
       printf '%s' "$resp"
     }
 
+    # enable the kv-v2 secrets engine at secret/
     MOUNTS=$(bao_api GET /v1/sys/mounts)
     if [ "$(echo "$MOUNTS" | jq -r '(.data // .) | has("secret/")')" = "false" ]; then
       echo "Enabling kv-v2 secrets engine"
@@ -47,6 +49,7 @@ data:
       echo "kv-v2 already enabled."
     fi
 
+    # enable the kubernetes auth method
     AUTHS=$(bao_api GET /v1/sys/auth)
     if [ "$(echo "$AUTHS" | jq -r '(.data // .) | has("kubernetes/")')" = "false" ]; then
       echo "Enabling Kubernetes auth"
@@ -60,10 +63,12 @@ data:
     bao_api POST /v1/auth/kubernetes/config \
       "{\"kubernetes_host\": \"https://kubernetes.default.svc:443\", \"kubernetes_ca_cert\": ${KUBE_CA_JSON}}"
 
+    # policy granting eso read and write on secret paths
     echo "Writing eso-policy"
     bao_api PUT /v1/sys/policies/acl/eso-policy \
       '{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}\n\npath \"secret/metadata/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}"}'
 
+    # bind the external-secrets serviceaccount to the policy
     echo "Creating eso-role"
     bao_api POST /v1/auth/kubernetes/role/eso-role \
       '{"bound_service_account_names": "external-secrets", "bound_service_account_namespaces": "external-secrets", "policies": "eso-policy", "ttl": "1h"}'

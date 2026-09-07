@@ -8,3 +8,4 @@ crash.log
 infra/terraform.tfvars
 *.xlsx
 age.agekey
+commands.txt
